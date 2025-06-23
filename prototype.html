@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoPlus Repartidor - Prototipo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Paleta de colores GoPlus */
+            --primary-orange: #F2771A;
+            --primary-dark: #1C1919;
+            --orange-light: #FF8B3A;
+            --orange-dark: #D65C00;
+            --gray-100: #F8F9FA;
+            --gray-200: #E9ECEF;
+            --gray-300: #DEE2E6;
+            --gray-400: #CED4DA;
+            --gray-500: #6C757D;
+            --gray-600: #495057;
+            --gray-700: #343A40;
+            --gray-800: #212529;
+            --white: #FFFFFF;
+            --success: #28A745;
+            --warning: #FFC107;
+            --danger: #DC3545;
+            --info: #17A2B8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--gray-100);
+            color: var(--primary-dark);
+            overflow-x: hidden;
+        }
+
+        .phone-container {
+            max-width: 375px;
+            margin: 20px auto;
+            background: var(--white);
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+            height: 812px;
+        }
+
+        .screen {
+            display: none;
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header.primary {
+            background: var(--primary-orange);
+            color: var(--white);
+            border-bottom: none;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: inherit;
+            padding: 5px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-orange);
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .logo.white {
+            color: var(--white);
+            margin: 0;
+        }
+
+        .content {
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Login Styles */
+        .login-screen {
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .repartidor-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .login-screen h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        .login-screen p {
+            font-size: 16px;
+            color: var(--gray-600);
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: var(--primary-orange);
+            color: var(--white);
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--orange-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn.secondary {
+            background: var(--white);
+            color: var(--primary-orange);
+            border: 2px solid var(--primary-orange);
+        }
+
+        .btn.danger {
+            background: var(--danger);
+        }
+
+        .btn.success {
+            background: var(--success);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--gray-300);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary-orange);
+        }
+
+        /* Dashboard Styles */
+        .status-card {
+            background: var(--white);
+            margin: 20px;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-card.online {
+            background: linear-gradient(135deg, var(--success), #34D058);
+            color: var(--white);
+        }
+
+        .status-card.offline {
+            background: linear-gradient(135deg, var(--gray-500), var(--gray-600));
+            color: var(--white);
+        }
+
+        .status-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .status-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .status-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .toggle-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Earnings Styles */
+        .earnings-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px;
+        }
+
+        .earning-item {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .earning-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-orange);
+            margin-bottom: 5px;
+        }
+
+        .earning-label {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Order Styles */
+        .order-notification {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            background: var(--white);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .order-notification.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+
+        .order-notification-header {
+            background: var(--primary-orange);
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .notification-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .notification-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .notification-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .order-details {
+            padding: 20px;
+        }
+
+        .order-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .order-info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .order-info-label {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .order-info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: var(--gray-100);
+        }
+
+        .order-timer {
+            background: var(--danger);
+            color: var(--white);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        /* Available Orders Styles */
+        .available-order-card {
+            background: var(--white);
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .available-order-card:hover {
+            border-color: var(--primary-orange);
+            box-shadow: 0 4px 15px rgba(242, 119, 26, 0.15);
+        }
+
+        .available-order-card.priority {
+            border-color: var(--danger);
+            background: rgba(220, 53, 69, 0.02);
+        }
+
+        .available-order-card.good-tip {
+            border-color: var(--success);
+            background: rgba(40, 167, 69, 0.02);
+        }
+
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px 10px;
+        }
+
+        .restaurant-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .restaurant-icon {
+            font-size: 20px;
+        }
+
+        .restaurant-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .order-badges {
+            display: flex;
+            gap: 5px;
+        }
+
+        .order-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-priority {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .badge-tip {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .badge-close {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .badge-cash {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .order-card-body {
+            padding: 0 20px 15px;
+        }
+
+        .order-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .order-metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-orange);
+            margin-bottom: 2px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .order-details-preview {
+            background: var(--gray-100);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .order-items {
+            font-size: 14px;
+            color: var(--gray-700);
+            margin-bottom: 5px;
+        }
+
+        .order-address {
+            font-size: 13px;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .order-card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-outline {
+            background: var(--white);
+            color: var(--primary-orange);
+            border: 2px solid var(--primary-orange);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-orange);
+            color: var(--white);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .time-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-top: 5px;
+        }
+
+        .time-urgent {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .time-good {
+            color: var(--success);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            background: var(--white);
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-item.active {
+            color: var(--primary-orange);
+        }
+
+        .nav-item .icon {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: var(--white);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-orange);
+            min-width: 300px;
+            max-width: 350px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            flex: 1;
+        }
+
+        .toast-success {
+            border-left-color: var(--success);
+        }
+
+        .toast-error {
+            border-left-color: var(--danger);
+        }
+
+        .toast-warning {
+            border-left-color: var(--warning);
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px;
+        }
+
+        .stat-item {
+            background: var(--white);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-orange);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+
+        .availability-reminder {
+            margin-bottom: 20px;
+        }
+
+        .availability-reminder .reminder-card {
+            background: var(--warning);
+            color: var(--white);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .reminder-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .reminder-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .reminder-text {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Profile Styles */
+        .profile-header {
+            background: var(--primary-orange);
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--white);
+            margin: -20px -20px 30px -20px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .profile-id {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .menu-option {
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .menu-option:hover {
+            background: var(--gray-100);
+            margin: 0 -20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .menu-option:last-child {
+            border-bottom: none;
+        }
+
+        .menu-option .icon {
+            color: var(--primary-orange);
+            font-size: 20px;
+            margin-right: 15px;
+        }
+
+        .menu-option span {
+            font-size: 16px;
+            color: var(--primary-dark);
+            flex: 1;
+        }
+
+        .menu-option .arrow {
+            color: var(--gray-400);
+            font-size: 16px;
+        }
+
+        /* History Styles */
+        .history-item {
+            background: var(--white);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-date {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .history-earning {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .history-details {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .history-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <!-- Pantalla de Login -->
+        <div class="screen active" id="login">
+            <div class="login-screen">
+                <div class="repartidor-icon">🏍️</div>
+                <div class="logo">GoPlus</div>
+                <h2>Repartidor</h2>
+                <p>Inicia sesión para comenzar a recibir pedidos</p>
+                
+                <div class="input-group">
+                    <label>Usuario</label>
+                    <input type="text" class="input" placeholder="Tu usuario de repartidor" value="juan.repartidor">
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" class="input" placeholder="Tu contraseña" value="••••••••">
+                </div>
+                
+                <button class="btn" onclick="login()">Iniciar Sesión</button>
+                <p style="margin-top: 20px; font-size: 14px; color: var(--gray-600);">
+                    ¿Problemas para ingresar? <a href="#" style="color: var(--primary-orange);">Contactar soporte</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Dashboard Principal -->
+        <div class="screen" id="dashboard">
+            <div class="header primary">
+                <div class="logo white">GoPlus</div>
+                <button class="back-btn" onclick="showNotifications()">🔔</button>
+            </div>
+            
+            <!-- Status Card -->
+            <div class="status-card offline" id="statusCard">
+                <div class="status-icon" id="statusIcon">🔴</div>
+                <div class="status-title" id="statusTitle">Desconectado</div>
+                <div class="status-subtitle" id="statusSubtitle">Activa tu disponibilidad para recibir pedidos</div>
+                <button class="toggle-btn" id="toggleBtn" onclick="toggleAvailability()">Activar</button>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="todayEarnings">Bs. 136</div>
+                    <div class="stat-label">Hoy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="todayDeliveries">28</div>
+                    <div class="stat-label">Entregas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgRating">4.9</div>
+                    <div class="stat-label">Rating</div>
+                </div>
+            </div>
+
+            <!-- Earnings Summary -->
+            <div class="earnings-summary">
+                <div class="earning-item">
+                    <div class="earning-amount">Bs. 485</div>
+                    <div class="earning-label">Esta Semana</div>
+                </div>
+                <div class="earning-item">
+                    <div class="earning-amount">Bs. 1,850</div>
+                    <div class="earning-label">Este Mes</div>
+                </div>
+            </div>
+
+            <!-- Order History Preview -->
+            <div class="content">
+                <h3>Últimas Entregas</h3>
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Hoy 14:30</div>
+                        <div class="history-earning">+Bs. 35</div>
+                    </div>
+                    <div class="history-details">Pizza Express → Av. Circunvalación</div>
+                    <div class="history-stats">
+                        <span>📍 2.5 km</span>
+                        <span>⏱️ 18 min</span>
+                        <span>⭐ 5.0</span>
+                    </div>
+                </div>
+                
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Hoy 12:15</div>
+                        <div class="history-earning">+Bs. 28</div>
+                    </div>
+                    <div class="history-details">Burger Palace → Villa Fátima</div>
+                    <div class="history-stats">
+                        <span>📍 1.8 km</span>
+                        <span>⏱️ 15 min</span>
+                        <span>⭐ 4.8</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notificación de Nuevo Pedido -->
+        <div class="order-notification" id="orderNotification">
+            <div class="order-notification-header">
+                <div class="notification-icon">📦</div>
+                <div class="notification-title">¡Nuevo Pedido!</div>
+                <div class="notification-subtitle">Tienes 45 segundos para responder</div>
+            </div>
+            
+            <div class="order-timer" id="orderTimer">⏰ 00:45</div>
+            
+            <div class="order-details">
+                <div class="order-info-row">
+                    <span class="order-info-label">Restaurante:</span>
+                    <span class="order-info-value">Burger Palace</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="order-info-label">Cliente:</span>
+                    <span class="order-info-value">María G.</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="order-info-label">Dirección:</span>
+                    <span class="order-info-value">Av. Circunvalación 123</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="order-info-label">Distancia:</span>
+                    <span class="order-info-value">2.5 km</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="order-info-label">Ganancia:</span>
+                    <span class="order-info-value" style="color: var(--success);">Bs. 35</span>
+                </div>
+            </div>
+            
+            <div class="order-actions">
+                <button class="btn danger" onclick="rejectOrder()">Rechazar</button>
+                <button class="btn success" onclick="acceptOrder()">Aceptar</button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Pedidos Disponibles -->
+        <div class="screen" id="available-orders">
+            <div class="header">
+                <div></div>
+                <h1>Pedidos Disponibles</h1>
+                <button class="back-btn" onclick="refreshAvailableOrders()">🔄</button>
+            </div>
+            
+            <div class="content">
+                <div class="availability-reminder" id="availabilityReminder" style="display: none;">
+                    <div class="reminder-card">
+                        <div class="reminder-icon">⚠️</div>
+                        <div class="reminder-title">Estás desconectado</div>
+                        <div class="reminder-text">Activa tu disponibilidad desde el inicio para ver pedidos</div>
+                    </div>
+                </div>
+
+                <div id="availableOrdersList">
+                    <!-- Los pedidos se generarán dinámicamente -->
+                </div>
+
+                <div class="empty-state" id="emptyOrdersState" style="display: none;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                    <h3 style="color: var(--gray-600); margin-bottom: 10px;">No hay pedidos disponibles</h3>
+                    <p>Los nuevos pedidos aparecerán aquí cuando estés online</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Entregas -->
+        <div class="screen" id="deliveries">
+            <div class="header">
+                <div></div>
+                <h1>Mis Entregas</h1>
+                <div></div>
+            </div>
+            
+            <div class="content">
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">28</div>
+                        <div class="stat-label">Hoy</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">156</div>
+                        <div class="stat-label">Esta Semana</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">4.9</div>
+                        <div class="stat-label">Rating Promedio</div>
+                    </div>
+                </div>
+
+                <h3>Historial</h3>
+                
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Hoy 15:45</div>
+                        <div class="history-earning">+Bs. 42</div>
+                    </div>
+                    <div class="history-details">Sushi Zen → Barrio Los Chapacos</div>
+                    <div class="history-stats">
+                        <span>📍 3.2 km</span>
+                        <span>⏱️ 22 min</span>
+                        <span>⭐ 5.0</span>
+                    </div>
+                </div>
+                
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Hoy 14:30</div>
+                        <div class="history-earning">+Bs. 35</div>
+                    </div>
+                    <div class="history-details">Pizza Express → Av. Circunvalación</div>
+                    <div class="history-stats">
+                        <span>📍 2.5 km</span>
+                        <span>⏱️ 18 min</span>
+                        <span>⭐ 5.0</span>
+                    </div>
+                </div>
+                
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Hoy 13:15</div>
+                        <div class="history-earning">+Bs. 28</div>
+                    </div>
+                    <div class="history-details">Green Bowl → Villa Fátima</div>
+                    <div class="history-stats">
+                        <span>📍 1.8 km</span>
+                        <span>⏱️ 15 min</span>
+                        <span>⭐ 4.8</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Ganancias -->
+        <div class="screen" id="earnings">
+            <div class="header">
+                <div></div>
+                <h1>Ganancias</h1>
+                <div></div>
+            </div>
+            
+            <div class="content">
+                <!-- Summary Cards -->
+                <div class="earnings-summary">
+                    <div class="earning-item" style="grid-column: 1 / -1;">
+                        <div class="earning-amount" style="font-size: 32px;">Bs. 136</div>
+                        <div class="earning-label">Ganancias de Hoy</div>
+                    </div>
+                    <div class="earning-item">
+                        <div class="earning-amount">Bs. 485</div>
+                        <div class="earning-label">Esta Semana</div>
+                    </div>
+                    <div class="earning-item">
+                        <div class="earning-amount">Bs. 1,850</div>
+                        <div class="earning-label">Este Mes</div>
+                    </div>
+                </div>
+
+                <!-- Performance Stats -->
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">28</div>
+                        <div class="stat-label">Entregas Hoy</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">12.8</div>
+                        <div class="stat-label">Km Recorridos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">8.5</div>
+                        <div class="stat-label">Horas Online</div>
+                    </div>
+                </div>
+
+                <h3>Desglose Diario</h3>
+                
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Hoy - 28 entregas</div>
+                        <div class="history-earning">Bs. 136</div>
+                    </div>
+                    <div class="history-details">8.5 horas • 12.8 km • ⭐ 4.9 promedio</div>
+                </div>
+                
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">Ayer - 24 entregas</div>
+                        <div class="history-earning">Bs. 118</div>
+                    </div>
+                    <div class="history-details">7.2 horas • 11.2 km • ⭐ 4.8 promedio</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Perfil -->
+        <div class="screen" id="profile">
+            <div class="header">
+                <div></div>
+                <h1>Mi Perfil</h1>
+                <div></div>
+            </div>
+            
+            <div class="profile-header">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-name">Juan Pérez</div>
+                <div class="profile-id">ID: RPT-001234</div>
+            </div>
+            
+            <div class="content">
+                <div class="menu-option">
+                    <span class="icon">📊</span>
+                    <span>Estadísticas</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option">
+                    <span class="icon">🏍️</span>
+                    <span>Mi Vehículo</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option">
+                    <span class="icon">📍</span>
+                    <span>Zona de Trabajo</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option">
+                    <span class="icon">💳</span>
+                    <span>Método de Pago</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option">
+                    <span class="icon">🔔</span>
+                    <span>Notificaciones</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option">
+                    <span class="icon">📞</span>
+                    <span>Soporte</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option">
+                    <span class="icon">⚙️</span>
+                    <span>Configuración</span>
+                    <span class="arrow">›</span>
+                </div>
+                <div class="menu-option" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Cerrar Sesión</span>
+                    <span class="arrow">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegación Inferior -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="goToScreen('dashboard')">
+                <div class="icon">🏠</div>
+                <span>Inicio</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('available-orders')">
+                <div class="icon" style="position: relative;">
+                    🛍️
+                    <div class="notification-badge" id="availableOrdersBadge">0</div>
+                </div>
+                <span>Pedidos</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('deliveries')">
+                <div class="icon">📦</div>
+                <span>Entregas</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('earnings')">
+                <div class="icon">💰</div>
+                <span>Ganancias</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('profile')">
+                <div class="icon">👤</div>
+                <span>Perfil</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estados globales
+        let isOnline = false;
+        let hasActiveOrder = false;
+        let orderTimer = null;
+        let remainingTime = 45;
+        let availableOrdersCount = 3;
+
+        // Datos de pedidos disponibles (simulados)
+        const mockAvailableOrders = [
+            {
+                id: 'ORD-001',
+                restaurant: 'Burger Palace',
+                restaurantIcon: '🍔',
+                customerName: 'Ana García',
+                items: ['1x Hamburguesa Clásica', '1x Papas Fritas', '1x Coca Cola'],
+                total: 58,
+                earning: 35,
+                distance: 2.3,
+                restaurantDistance: 0.8,
+                estimatedTime: 25,
+                address: 'Av. Circunvalación 123, Villa Fátima',
+                paymentMethod: 'card',
+                priority: false,
+                goodTip: true,
+                orderTime: '14:30'
+            },
+            {
+                id: 'ORD-002',
+                restaurant: 'Pizza Express',
+                restaurantIcon: '🍕',
+                customerName: 'Carlos Mendoza',
+                items: ['1x Pizza Familiar', '2x Coca Cola 2L'],
+                total: 95,
+                earning: 45,
+                distance: 3.8,
+                restaurantDistance: 1.2,
+                estimatedTime: 35,
+                address: 'Calle Sucre 456, Centro',
+                paymentMethod: 'cash',
+                priority: true,
+                goodTip: false,
+                orderTime: '14:45'
+            },
+            {
+                id: 'ORD-003',
+                restaurant: 'Sushi Zen',
+                restaurantIcon: '🍣',
+                customerName: 'María López',
+                items: ['1x Combo Sushi', '1x Tempura', '1x Té Verde'],
+                total: 120,
+                earning: 52,
+                distance: 1.9,
+                restaurantDistance: 0.5,
+                estimatedTime: 20,
+                address: 'Barrio Los Chapacos, Casa #234',
+                paymentMethod: 'qr',
+                priority: false,
+                goodTip: true,
+                orderTime: '14:50'
+            }
+        ];
+
+        // Navegación entre pantallas
+        function goToScreen(screenId) {
+            // Ocultar todas las pantallas
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Mostrar la pantalla seleccionada
+            document.getElementById(screenId).classList.add('active');
+            
+            // Actualizar navegación
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Mostrar/ocultar navegación inferior según la pantalla
+            const bottomNav = document.querySelector('.bottom-nav');
+            const showNavScreens = ['dashboard', 'available-orders', 'deliveries', 'earnings', 'profile'];
+            
+            if (showNavScreens.includes(screenId)) {
+                bottomNav.style.display = 'flex';
+                // Activar item correspondiente
+                const navItems = document.querySelectorAll('.nav-item');
+                if (screenId === 'dashboard') navItems[0].classList.add('active');
+                if (screenId === 'available-orders') navItems[1].classList.add('active');
+                if (screenId === 'deliveries') navItems[2].classList.add('active');
+                if (screenId === 'earnings') navItems[3].classList.add('active');
+                if (screenId === 'profile') navItems[4].classList.add('active');
+            } else {
+                bottomNav.style.display = 'none';
+            }
+            
+            // Cargar contenido específico de la pantalla
+            if (screenId === 'available-orders') {
+                loadAvailableOrders();
+            }
+        }
+
+        // Sistema de login
+        function login() {
+            showSuccessToast('¡Bienvenido de vuelta, Juan!');
+            setTimeout(() => {
+                goToScreen('dashboard');
+            }, 1000);
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro que quieres cerrar sesión?')) {
+                if (isOnline) {
+                    toggleAvailability();
+                }
+                showSuccessToast('Sesión cerrada correctamente');
+                setTimeout(() => {
+                    goToScreen('login');
+                }, 1000);
+            }
+        }
+
+        // Función principal: Toggle de disponibilidad
+        function toggleAvailability() {
+            isOnline = !isOnline;
+            updateStatusCard();
+            updateAvailableOrdersBadge();
+            
+            if (isOnline) {
+                showSuccessToast('¡Ahora estás online! Esperando pedidos...');
+                // Simular primer pedido después de 3 segundos
+                setTimeout(() => {
+                    if (isOnline && !hasActiveOrder) {
+                        showNewOrderNotification();
+                    }
+                }, 3000);
+            } else {
+                showToast('Te has desconectado. No recibirás nuevos pedidos.', 'warning');
+                hideOrderNotification();
+            }
+        }
+
+        // Actualizar la tarjeta de estado
+        function updateStatusCard() {
+            const statusCard = document.getElementById('statusCard');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusSubtitle = document.getElementById('statusSubtitle');
+            const toggleBtn = document.getElementById('toggleBtn');
+
+            if (isOnline) {
+                statusCard.className = 'status-card online';
+                statusIcon.textContent = '🟢';
+                statusTitle.textContent = 'Conectado';
+                statusSubtitle.textContent = hasActiveOrder ? 'Tienes un pedido activo' : 'Esperando pedidos...';
+                toggleBtn.textContent = 'Desactivar';
+            } else {
+                statusCard.className = 'status-card offline';
+                statusIcon.textContent = '🔴';
+                statusTitle.textContent = 'Desconectado';
+                statusSubtitle.textContent = 'Activa tu disponibilidad para recibir pedidos';
+                toggleBtn.textContent = 'Activar';
+            }
+        }
+
+        // Actualizar badge de pedidos disponibles
+        function updateAvailableOrdersBadge() {
+            const badge = document.getElementById('availableOrdersBadge');
+            if (isOnline && !hasActiveOrder && availableOrdersCount > 0) {
+                badge.textContent = availableOrdersCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Cargar pedidos disponibles
+        function loadAvailableOrders() {
+            const availabilityReminder = document.getElementById('availabilityReminder');
+            const ordersList = document.getElementById('availableOrdersList');
+            const emptyState = document.getElementById('emptyOrdersState');
+            
+            if (!isOnline) {
+                // Mostrar recordatorio de disponibilidad
+                availabilityReminder.style.display = 'block';
+                ordersList.innerHTML = '';
+                emptyState.style.display = 'none';
+                return;
+            }
+            
+            availabilityReminder.style.display = 'none';
+            
+            if (hasActiveOrder) {
+                // Si tiene pedido activo, no mostrar más pedidos
+                ordersList.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
+                        <h3 style="color: var(--gray-600); margin-bottom: 10px;">Completa tu pedido actual</h3>
+                        <p>Termina tu entrega actual para ver nuevos pedidos disponibles</p>
+                    </div>
+                `;
+                emptyState.style.display = 'none';
+                return;
+            }
+            
+            if (mockAvailableOrders.length === 0) {
+                ordersList.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            ordersList.innerHTML = mockAvailableOrders.map(order => createOrderCard(order)).join('');
+        }
+
+        // Crear tarjeta de pedido
+        function createOrderCard(order) {
+            const badges = [];
+            if (order.priority) badges.push('<span class="order-badge badge-priority">Urgente</span>');
+            if (order.goodTip) badges.push('<span class="order-badge badge-tip">Buena propina</span>');
+            if (order.restaurantDistance <= 1) badges.push('<span class="order-badge badge-close">Cerca</span>');
+            if (order.paymentMethod === 'cash') badges.push('<span class="order-badge badge-cash">Efectivo</span>');
+            
+            const cardClass = order.priority ? 'available-order-card priority' : 
+                             order.goodTip ? 'available-order-card good-tip' : 
+                             'available-order-card';
+            
+            const timeClass = order.estimatedTime > 30 ? 'time-urgent' : 'time-good';
+            
+            return `
+                <div class="${cardClass}">
+                    <div class="order-card-header">
+                        <div class="restaurant-info">
+                            <span class="restaurant-icon">${order.restaurantIcon}</span>
+                            <span class="restaurant-name">${order.restaurant}</span>
+                        </div>
+                        <div class="order-badges">
+                            ${badges.join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="order-card-body">
+                        <div class="order-summary">
+                            <div class="order-metric">
+                                <div class="metric-value">Bs. ${order.earning}</div>
+                                <div class="metric-label">Ganancia</div>
+                            </div>
+                            <div class="order-metric">
+                                <div class="metric-value">${order.distance} km</div>
+                                <div class="metric-label">Distancia</div>
+                            </div>
+                            <div class="order-metric">
+                                <div class="metric-value ${timeClass}">${order.estimatedTime} min</div>
+                                <div class="metric-label">Tiempo est.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="order-details-preview">
+                            <div class="order-items">${order.items.slice(0, 2).join(', ')}${order.items.length > 2 ? ` +${order.items.length - 2} más` : ''}</div>
+                            <div class="order-address">
+                                <span>📍</span>
+                                <span>${order.address.substring(0, 30)}${order.address.length > 30 ? '...' : ''}</span>
+                            </div>
+                            <div class="time-indicator">
+                                <span>🕐</span>
+                                <span>Pedido a las ${order.orderTime}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-card-actions">
+                            <button class="btn-outline" onclick="showOrderDetail('${order.id}')">Ver Detalle</button>
+                            <button class="btn success btn-small" onclick="acceptOrderFromList('${order.id}')">Aceptar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showOrderDetail(orderId) {
+            alert(`Mostrando detalles del pedido ${orderId}\n\n(Funcionalidad de modal en desarrollo)`);
+        }
+
+        function acceptOrderFromList(orderId) {
+            const order = mockAvailableOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            hasActiveOrder = true;
+            availableOrdersCount--;
+            updateStatusCard();
+            updateAvailableOrdersBadge();
+            
+            showSuccessToast(`¡Pedido de ${order.restaurant} aceptado!`);
+            
+            // Recargar lista de pedidos disponibles
+            if (document.getElementById('available-orders').classList.contains('active')) {
+                loadAvailableOrders();
+            }
+        }
+
+        function refreshAvailableOrders() {
+            showSuccessToast('Actualizando pedidos disponibles...');
+            
+            // Simular actualización
+            setTimeout(() => {
+                loadAvailableOrders();
+                showSuccessToast('Lista actualizada');
+            }, 1000);
+        }
+
+        // Sistema de notificación de nuevo pedido
+        function showNewOrderNotification() {
+            if (!isOnline || hasActiveOrder) return;
+            
+            document.getElementById('orderNotification').classList.add('show');
+            remainingTime = 45;
+            updateOrderTimer();
+            
+            // Sonido de notificación simulado
+            showSuccessToast('🔔 ¡Nuevo pedido disponible!');
+            
+            orderTimer = setInterval(() => {
+                remainingTime--;
+                updateOrderTimer();
+                
+                if (remainingTime <= 0) {
+                    autoRejectOrder();
+                }
+            }, 1000);
+        }
+
+        function updateOrderTimer() {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('orderTimer').textContent = `⏰ ${timeString}`;
+        }
+
+        function hideOrderNotification() {
+            document.getElementById('orderNotification').classList.remove('show');
+            if (orderTimer) {
+                clearInterval(orderTimer);
+                orderTimer = null;
+            }
+        }
+
+        function acceptOrder() {
+            hasActiveOrder = true;
+            hideOrderNotification();
+            updateStatusCard();
+            updateAvailableOrdersBadge();
+            showSuccessToast('¡Pedido aceptado! Dirígete al restaurante');
+            
+            // Simular completar pedido después de 10 segundos
+            setTimeout(() => {
+                completeOrder();
+            }, 10000);
+        }
+
+        function rejectOrder() {
+            hideOrderNotification();
+            showToast('Pedido rechazado', 'warning');
+            
+            // Simular nuevo pedido después de un tiempo
+            setTimeout(() => {
+                if (isOnline && !hasActiveOrder) {
+                    showNewOrderNotification();
+                }
+            }, 8000);
+        }
+
+        function autoRejectOrder() {
+            hideOrderNotification();
+            showToast('Tiempo agotado - Pedido automáticamente rechazado', 'error');
+            
+            // Simular nuevo pedido después de un tiempo
+            setTimeout(() => {
+                if (isOnline && !hasActiveOrder) {
+                    showNewOrderNotification();
+                }
+            }, 10000);
+        }
+
+        function completeOrder() {
+            hasActiveOrder = false;
+            availableOrdersCount = Math.max(0, availableOrdersCount);
+            
+            updateStatusCard();
+            updateAvailableOrdersBadge();
+            
+            showSuccessToast('¡Entrega completada! +Bs. 35 ganados');
+            
+            // Si sigue online, simular nuevo pedido
+            if (isOnline) {
+                setTimeout(() => {
+                    showNewOrderNotification();
+                }, 5000);
+            }
+        }
+
+        function showNotifications() {
+            alert('Notificaciones:\n\n• Nuevo pedido disponible\n• Tu rating semanal: 4.9 ⭐\n• Pago procesado: Bs. 485');
+        }
+
+        // Sistema de Toast
+        function showToast(message, type = 'info') {
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <span class="toast-icon">${getToastIcon(type)}</span>
+                    <span class="toast-message">${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function showSuccessToast(message) {
+            showToast(message, 'success');
+        }
+
+        function getToastIcon(type) {
+            switch(type) {
+                case 'success': return '✅';
+                case 'error': return '❌';
+                case 'warning': return '⚠️';
+                default: return 'ℹ️';
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAvailableOrdersBadge();
+        });
+    </script>
+</body>
+</html>
